@@ -1,19 +1,34 @@
 
 const { useState, useEffect, useRef } = React;
 
-// --- Helper Component: Lucide Icon Wrapper ---
+// --- Helper Component: Safe Lucide Icon Wrapper ---
+// این نسخه از تداخل ریکت و کتابخانه آیکون جلوگیری می‌کند
 const Icon = ({ name, size = 24, className = "" }) => {
-    const svgRef = useRef(null);
+    const iconRef = useRef(null);
+
     useEffect(() => {
-        if (svgRef.current) {
-            lucide.createIcons({
-                icons: { [name]: lucide.icons[name] },
-                nameAttr: 'data-lucide',
-                attrs: { class: className, width: size, height: size, "stroke-width": 2 }
-            });
+        if (iconRef.current) {
+            // تبدیل نام‌ها مثل layout-dashboard به layoutDashboard
+            const camelName = name.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+            const iconNode = lucide.icons[camelName];
+
+            // پاک کردن محتوای قبلی برای جلوگیری از خطای ری‌اکت
+            iconRef.current.innerHTML = '';
+
+            if (iconNode) {
+                // ساخت تگ SVG به صورت دستی
+                const svg = lucide.createElement(iconNode);
+                svg.setAttribute('width', size);
+                svg.setAttribute('height', size);
+                if (className) svg.setAttribute('class', className);
+                
+                iconRef.current.appendChild(svg);
+            }
         }
     }, [name, size, className]);
-    return <i ref={svgRef} data-lucide={name}></i>;
+
+    // ری‌اکت این تگ span را کنترل می‌کند و آیکون درون آن تزریق می‌شود
+    return <span ref={iconRef} className={`inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}></span>;
 };
 
 // --- Animated Theme Toggle Component ---
@@ -379,5 +394,6 @@ const App = () => {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
+
 
 
